@@ -1,0 +1,68 @@
+<script type="text/javascript">
+    $(document).ready(function () {
+                lines = removeDiscount();
+  				removeBundle(lines);
+    });
+    function intToArray(int){
+        var array = (""+int).split("");
+        return array;
+    }
+
+    function removeDiscount(){
+      var lines = {{ lines }};
+      lines = intToArray(lines);
+      console.log(lines);
+      return lines;
+    }
+
+	function removeBundle(lines){
+      //console.log(lines);
+        Shopify.queue = [];
+        var quantity = {{ cart.item_count }} ;
+        var newArray = lines;
+      	var firstLine = lines[0];
+      	//console.log(lines);
+        for (var i = 0; i < newArray.length; i++) {
+          line = newArray[i];
+          Shopify.queue.push({
+            line: line,
+          });
+            }
+        Shopify.moveAlong = function() {
+        // If we still have requests in the queue, let's process the next one.
+        if (Shopify.queue.length) {
+            var request = Shopify.queue.shift();
+            var data = 'line=' + request.line + '&properties["_discount"]=0';
+          	//console.log(request.line);
+            $.ajax({
+              type: 'POST',
+              url: '/cart/change.js',
+              dataType: 'json',
+              data: data,
+              success: function(res){ 
+                Shopify.moveAlong();
+                window.location.replace("/cart");
+             },
+                 error: function(){
+             // if it's not last one Move Along else update the cart number with the current quantity
+                if (Shopify.queue.length){
+                  Shopify.moveAlong();
+                  
+                } else {
+                  console.log('');
+                }
+              }
+               });
+        }
+       // If the queue is empty, we add 1 to cart
+      else {
+        console.log('ok');
+       }
+         };
+      Shopify.moveAlong();
+      
+    };
+      function addToCartOk(quantity){  
+        $('#cart-number').replaceWith('<a href="/cart" id="cart-number">View cart (" + quantity + ")</a>');
+}
+</script>
